@@ -42,6 +42,18 @@ static char *limpar_mensagem(char *s) {
     return s;
 }
 
+/* Mostra o prompt e le uma linha digitada.
+ * Devolve 1 se leu algo e 0 se a entrada acabou (Ctrl+D / Ctrl+Z). */
+static int ler_comando(char *entrada, int tamanho) {
+    printf("minigit> ");
+    fflush(stdout);
+    if (fgets(entrada, tamanho, stdin) == NULL) {
+        return 0;
+    }
+    entrada[strcspn(entrada, "\r\n")] = '\0';
+    return 1;
+}
+
 int main(void) {
     Lista *historico = lista_criar();   /* commits */
     Fila  *staging   = fila_criar();    /* arquivos adicionados */
@@ -49,14 +61,10 @@ int main(void) {
     int proximo_id = 1;
 
     char entrada[MAX_ENTRADA];
+    int continuar = 1;
     puts("mini-git em C -- digite 'ajuda' para ver os comandos.");
 
-    for (;;) {
-        printf("minigit> ");
-        fflush(stdout);
-        if (!fgets(entrada, sizeof entrada, stdin)) break;
-        entrada[strcspn(entrada, "\r\n")] = '\0';
-
+    while (continuar && ler_comando(entrada, sizeof entrada)) {
         char *cmd = strtok(entrada, " ");
         if (!cmd) continue;
 
@@ -119,7 +127,7 @@ int main(void) {
         } else if (strcmp(cmd, "ajuda") == 0) {
             ajuda();
         } else if (strcmp(cmd, "sair") == 0) {
-            break;
+            continuar = 0;
         } else {
             printf("comando desconhecido: '%s' (digite 'ajuda')\n", cmd);
         }
