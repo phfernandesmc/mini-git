@@ -1,47 +1,33 @@
-#include <stdlib.h>
+#include <stddef.h>
 #include "pilha.h"
 
-typedef struct NoPilha {
-    Fila           *staging;
-    struct NoPilha *abaixo;
-} NoPilha;
-
-struct Pilha {
-    NoPilha *topo;
-    int      tamanho;
-};
-
-Pilha *pilha_criar(void) {
-    Pilha *p = malloc(sizeof *p);
-    p->topo = NULL;
-    p->tamanho = 0;
-    return p;
+void pil_inicializar(pilha *p) {
+    p->topo = -1;
 }
 
-void pilha_empilhar(Pilha *p, Fila *f) {
-    NoPilha *no = malloc(sizeof *no);
-    no->staging = f;
-    no->abaixo = p->topo;   /* o novo no aponta para o antigo topo */
-    p->topo = no;
-    p->tamanho++;
+bool pil_push(pilha *p, Stash val) {
+    if (pil_cheia(*p))                 /* overflow: nao cabe */
+        return false;
+    p->topo++;                         /* o topo sobe uma posicao */
+    p->itens[p->topo] = val;           /* e o item novo fica nela */
+    return true;
 }
 
-Fila *pilha_desempilhar(Pilha *p) {
-    if (!p->topo) return NULL;
-    NoPilha *no = p->topo;
-    Fila *f = no->staging;
-    p->topo = no->abaixo;
-    free(no);
-    p->tamanho--;
-    return f;
+bool pil_pop(pilha *p, Stash *val) {
+    if (pil_vazia(*p) || val == NULL)  /* underflow: nada para tirar */
+        return false;
+    *val = p->itens[p->topo];          /* devolve o item do topo */
+    p->topo--;                         /* e o topo desce uma posicao */
+    return true;
 }
 
-Fila *pilha_topo(const Pilha *p)    { return p->topo ? p->topo->staging : NULL; }
-int   pilha_vazia(const Pilha *p)   { return p->tamanho == 0; }
-int   pilha_tamanho(const Pilha *p) { return p->tamanho; }
-
-void pilha_liberar(Pilha *p) {
-    if (!p) return;
-    while (!pilha_vazia(p)) fila_liberar(pilha_desempilhar(p));
-    free(p);
+bool pil_topo(pilha p, Stash *val) {
+    if (pil_vazia(p) || val == NULL)
+        return false;
+    *val = p.itens[p.topo];
+    return true;
 }
+
+bool pil_vazia(pilha p)  { return p.topo == -1; }
+bool pil_cheia(pilha p)  { return p.topo == PIL_MAX - 1; }
+int  pil_tamanho(pilha p) { return p.topo + 1; }
